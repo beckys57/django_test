@@ -1,0 +1,15 @@
+{% if all_questions %}
+	{% for q in all_questions %}
+		<h1>{{ q.question_text }}</h1>
+		{% if error_message %}
+			<p><strong>{{error_message}}</strong></p>
+		{% endif %}
+		
+		<ul>
+		{% for choice in q.choice_set.all %}
+			<li>{{ choice.choice_text }}</li>
+		{% endfor %}
+		</ul>
+		<a href="{% url 'polls:update' q.id %}">Add choices</a>
+	{% endfor %}
+{% endif %}

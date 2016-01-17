@@ -1,0 +1,71 @@
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.core.urlresolvers import reverse
+from django.views import generic
+from django.utils import timezone
+
+from .models import Choice, Question
+
+# Create your views here.
+class IndexView(generic.ListView):
+	template_name='polls/index.html'
+	context_object_name = 'latest_question_list'
+
+	def get_queryset(self):
+		#Return last five published questions (not including future)
+		return Question.objects.filter(
+			pub_date__lte=timezone.now()
+			).order_by('-pub_date')[:5]
+
+class DetailsView(generic.DetailView):
+	model = Question
+	template_name = 'polls/details.html'
+
+class ResultsView(generic.DetailView):
+	model = Question
+	template_name = 'polls/results.html'
+
+def vote(request, question_id):
+	question = get_object_or_404(Question, pk=question_id)
+	try:
+		selected_choice = question.choice_set.get(pk=request.POST['choice'])
+	except(KeyError, Choice.DoesNotExist):
+		#Show voting form again
+		return render(request, 'polls/detail.html',{
+			'question': question,
+			'error_message': "You didn't make a selection"
+			})
+	else:
+		selected_choice.votes +=1
+		selected_choice.save()
+		# Always return an HttpResponseRedirect after successfully dealing
+    # with POST data. This prevents data from being posted twice if a
+    # user hits the Back button.
+	return HttpResponseRedirect(reverse('polls:results', args=(question_id,)))
+
+def addchoice(request, question_id):
+	question = get_object_or_404(Question, pk=question_id)
+	new_choice = Choice()
+	new_choice.choice_text = request.POST['new_choice']
+	new_choice.question_id = question_id	
+	new_choice.save()
+	return HttpResponseRedirect(reverse('polls:update', args=(question_id,)))
+
+class DetailView(generic.DetailView):
+	def get_queryset(self):
+		"""
+		Excludes any questions that aren't published yet.
+		"""
+		return Question.objects.filter(pub_date__lte=timezone.now())
+
+class FullView(generic.ListView):
+	template_name = 'polls/all.html'
+	context_object_name='all_questions'
+
+	def get_queryset(self):
+		#Return all questions
+		return Question.objects.all()
+
+class Update(generic.DetailView):
+	model = Question
+	template_name = 'polls/update.html'

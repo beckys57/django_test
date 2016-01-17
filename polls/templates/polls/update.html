@@ -1,0 +1,18 @@
+<h1>Update question</h1>
+
+<p><strong>Question:</strong></p> {{ question.question_text }}
+
+<ul>
+{% for choice in question.choice_set.all %}
+	<li>{{ choice.choice_text }}</li>
+{% endfor %}
+</ul>
+
+<form method="post" action="{% url 'polls:addchoice' question.id %}">
+	{% csrf_token %}
+	<label>Enter your option</label>
+	<input type="text" name="new_choice"/>
+	<input type="submit" value="Submit">
+</form>
+
+<a href="{% url 'polls:all' %}">Back to questions</a>
